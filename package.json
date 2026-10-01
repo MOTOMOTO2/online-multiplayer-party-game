@@ -10,7 +10,9 @@
   "scripts": {
     "start": "node server/index.js",
     "test": "node --test",
-    "smoke": "node scripts/smoke.js"
+    "smoke": "node scripts/smoke.js",
+    "browser-check": "node scripts/browser-check.js",
+    "deploy": "flyctl deploy --remote-only"
   },
   "dependencies": {
     "ws": "^8.22.0"

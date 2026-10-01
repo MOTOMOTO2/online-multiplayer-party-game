@@ -66,11 +66,33 @@ async function shot(page, name) {
   await page.screenshot({ path: path.join(SHOT_DIR, `${name}.png`) });
 }
 
+/**
+ * Chrome freezes backgrounded tabs, which stalls CDP evaluate calls against
+ * whichever page isn't in front. Each player therefore gets a whole browser
+ * instance - which also means a separate profile and separate localStorage,
+ * a closer match to two real devices.
+ */
+async function launchBrowser(executablePath) {
+  return puppeteer.launch({
+    executablePath,
+    headless: true,
+    protocolTimeout: 30_000,
+    args: [
+      '--no-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-background-timer-throttling',
+      '--disable-renderer-backgrounding',
+      '--disable-backgrounding-occluded-windows',
+    ],
+  });
+}
+
 /** A browser tab playing as one person. */
 class Tab {
-  constructor(page, label) {
+  constructor(page, label, browser) {
     this.page = page;
     this.label = label;
+    this.browser = browser;
     this.consoleErrors = [];
 
     page.on('console', (m) => {
@@ -145,16 +167,18 @@ async function main() {
   log(`Browser check against ${base}`);
   log(`  using ${executablePath}`);
 
-  const browser = await puppeteer.launch({
-    executablePath,
-    headless: true,
-    args: ['--no-sandbox', '--disable-dev-shm-usage'],
-  });
+  const browsers = [await launchBrowser(executablePath), await launchBrowser(executablePath)];
 
   try {
-    const host = await new Tab(await browser.newPage(), 'host').open();
-    const guest = await new Tab(await browser.newPage(), 'guest').open();
+    const [host, guest] = await Promise.all(
+      ['host', 'guest'].map(async (label, i) => {
+        const browser = browsers[i];
+        const page = await browser.newPage();
+        return new Tab(page, label, browser).open();
+      }),
+    );
     const tabs = [host, guest];
+    log('  launched two independent browser profiles');
 
     // ---- home screen carries the rules --------------------------------
     const rulesText = await host.page.$eval('.rules', (n) => n.textContent);
@@ -334,7 +358,7 @@ async function main() {
     log('\nPASS - two real browser tabs played a full game with no console errors.');
     if (SHOTS) log(`Screenshots in ${SHOT_DIR}`);
   } finally {
-    await browser.close();
+    await Promise.all(browsers.map((b) => b.close().catch(() => {})));
   }
 }
 

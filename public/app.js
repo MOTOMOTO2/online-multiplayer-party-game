@@ -744,11 +744,13 @@ function finalStage() {
       { class: 'card' },
       el('p', {
         class: 'winner-banner',
-        text: youWon
-          ? '🏆 You win!'
-          : winners.length > 1
+        // A tie is announced as a tie, even for the players in it.
+        text:
+          winners.length > 1
             ? `🏆 It's a tie: ${winners.map((w) => w.name).join(' & ')}`
-            : `🏆 ${winners[0]?.name ?? 'Nobody'} wins!`,
+            : youWon
+              ? '🏆 You win!'
+              : `🏆 ${winners[0]?.name ?? 'Nobody'} wins!`,
       }),
       el(
         'ul',
