@@ -138,8 +138,14 @@ class Tab {
         disabled: b.disabled === true,
         mine: b.classList.contains('is-mine'),
         truth: b.classList.contains('is-truth'),
+        pickedRight: b.classList.contains('picked-right'),
+        pickedWrong: b.classList.contains('picked-wrong'),
       })),
-      locked: document.querySelector('#stage .locked-value')?.textContent ?? null,
+      locked:
+        document.querySelector('#stage .locked:not(.truth-callout) .locked-value')?.textContent ??
+        null,
+      answer: document.querySelector('#stage .truth-callout .locked-value')?.textContent ?? null,
+      verdict: document.querySelector('#stage .verdict')?.textContent ?? null,
       podium: [...document.querySelectorAll('.podium li')].map((li) => li.textContent.trim()),
       winner: document.querySelector('.winner-banner')?.textContent ?? null,
       error: (() => {
@@ -243,6 +249,12 @@ async function main() {
 
       for (const [i, tab] of tabs.entries()) {
         await tab.page.waitForSelector('#lie-input');
+        // Regression guard: last round's draft must not survive into this one.
+        const carried = await tab.page.$eval('#lie-input', (n) => n.value);
+        assert(
+          carried === '',
+          `${tab.label}: round ${round} should open with an empty lie box (found "${carried}")`,
+        );
         await tab.page.type('#lie-input', `${tab.label} fib ${round}.${i}`);
         await tab.clickText('#stage .btn-primary', 'Lock in my lie');
       }
@@ -292,6 +304,26 @@ async function main() {
           `${tab.label}: the reveal should highlight the truth`,
         );
         assert(!v.prompt.includes('?'), `${tab.label}: the blank should be filled in on reveal`);
+
+        const truthOption = v.options.find((o) => o.truth);
+        assert(
+          v.answer && truthOption.text.includes(v.answer),
+          `${tab.label}: the reveal should spell out the real answer (got ${JSON.stringify(
+            v.answer,
+          )})`,
+        );
+        const picked = v.options.filter((o) => o.pickedRight || o.pickedWrong);
+        assert(
+          picked.length === 1,
+          `${tab.label}: exactly one option should be ringed as your pick (got ${picked.length})`,
+        );
+        assert(
+          picked[0].pickedRight === picked[0].truth,
+          `${tab.label}: your pick is ringed ${
+            picked[0].pickedRight ? 'green' : 'red'
+          } but truth=${picked[0].truth}`,
+        );
+        assert(v.verdict, `${tab.label}: the reveal should say whether you got it right`);
       }
       if (round === 1) {
         await shot(host.page, '5-reveal');

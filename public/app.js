@@ -68,6 +68,9 @@ let chatEntries = [];
 let stageSignature = null;
 let phaseText = '';
 let draft = '';
+// The round the draft belongs to: a lie typed in round 2 must not reappear
+// in round 3's empty box.
+let draftRound = null;
 let reconnectAttempts = 0;
 let closing = false;
 let pingTimer = null;
@@ -285,6 +288,8 @@ const PHASE_TEXT = {
 function render() {
   if (!state) return;
 
+  resetDraftOnNewRound();
+
   $('#room-code').textContent = currentRoom ?? '————';
   $('#round-label').textContent =
     state.phase === 'lobby'
@@ -303,6 +308,17 @@ function render() {
   renderStage();
   updateWaitingLine();
   tickTimer();
+}
+
+/**
+ * Drop the half-written lie whenever we leave the round it was typed in, so a
+ * new round (or a new game) always starts from an empty box.
+ */
+function resetDraftOnNewRound() {
+  const typing = state.phase === 'lie' ? state.round : null;
+  if (typing === draftRound) return;
+  draft = '';
+  draftRound = typing;
 }
 
 function renderRoster() {
@@ -658,16 +674,42 @@ function guessStage() {
 function revealStage() {
   const { reveal } = state;
   const mine = reveal.awards.find((a) => a.playerId === state.youId);
+  // Your own guess comes back inside the reveal, so the board can ring the
+  // option you picked: green when it was the truth, red when it was a lie.
+  const myPick = mine?.guessedOptionId ?? null;
+  const myPickOption = myPick ? reveal.options.find((o) => o.id === myPick) : null;
 
   const options = reveal.options.map((o) => {
     const isTruth = o.id === reveal.truthOptionId;
+    const isMyPick = o.id === myPick;
     const pickers = o.pickedBy.map((p) => p.name).join(', ');
+
+    const tags = [
+      isMyPick
+        ? el('span', {
+            class: `option-tag ${isTruth ? 'right' : 'wrong'}`,
+            // The tick/cross carries the same meaning as the colour, for
+            // anyone who can't tell the green ring from the red one.
+            text: isTruth ? '✓ your pick' : '✗ your pick',
+          })
+        : null,
+      isTruth ? el('span', { class: 'option-tag truth', text: 'TRUTH' }) : null,
+    ].filter(Boolean);
+
     return el(
       'li',
       {},
       el(
         'div',
-        { class: `option ${isTruth ? 'is-truth' : ''}` },
+        {
+          class: [
+            'option',
+            isTruth && 'is-truth',
+            isMyPick && (isTruth ? 'picked-right' : 'picked-wrong'),
+          ]
+            .filter(Boolean)
+            .join(' '),
+        },
         el(
           'span',
           { class: 'option-text' },
@@ -683,7 +725,7 @@ function revealStage() {
                 }`,
           }),
         ),
-        isTruth ? el('span', { class: 'option-tag truth', text: 'TRUTH' }) : null,
+        tags.length ? el('span', { class: 'option-tags' }, tags) : null,
       ),
     );
   });
@@ -713,12 +755,33 @@ function revealStage() {
     ),
   );
 
+  // Spectators (anyone who joined mid-round) have no award and no pick.
+  const verdict = mine
+    ? el('p', {
+        class: `verdict ${mine.foundTruth ? 'verdict-right' : 'verdict-wrong'}`,
+        text: mine.foundTruth
+          ? `✓ You picked the truth — +${mine.truthBonus}`
+          : myPickOption
+            ? `✗ You picked ${
+                myPickOption.auto ? 'an auto-filled answer' : `${myPickOption.authorName}'s lie`
+              }`
+            : "✗ You didn't lock in a guess",
+      })
+    : null;
+
   return [
     el(
       'section',
       { class: 'card' },
       el('h2', { text: `Round ${state.round} results` }),
       promptNode(state.prompt?.text ?? '', reveal.answer),
+      el(
+        'div',
+        { class: 'locked truth-callout' },
+        el('span', { class: 'locked-label', text: 'The real answer' }),
+        el('span', { class: 'locked-value', text: reveal.answer }),
+      ),
+      verdict,
       mine
         ? el('p', {
             class: 'hint',

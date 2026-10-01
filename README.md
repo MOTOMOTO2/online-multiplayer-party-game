@@ -26,9 +26,12 @@ without anyone explaining it.
    duplicate someone else's lie and you're asked for another.
 3. **Then spot the truth.** All the lies get shuffled in with the real answer.
    Pick the one you think is true — you can't pick your own lie.
-4. **Score.** `+1000` for finding the truth, `+500` for every player who falls
+4. **Watch the reveal.** The round results spell out the real answer and ring
+   the option you picked: green when you found the truth, red when you fell for
+   someone's lie. Every answer shows who wrote it and who it fooled.
+5. **Score.** `+1000` for finding the truth, `+500` for every player who falls
    for your lie.
-5. **Highest score after the last round wins.** Run out of time and a feeble
+6. **Highest score after the last round wins.** Run out of time and a feeble
    answer gets picked for you, so don't dawdle.
 
 The host picks 3, 5 or 8 rounds and starts the game once at least two players
