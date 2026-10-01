@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Bluffalo — the online bluffing party game</title>
+    <meta
+      name="description"
+      content="Bluffalo is a free online party game for 2-10 players. Invent a convincing lie, then spot the truth among everyone else's. Play from any phone or laptop with a 4-letter room code."
+    />
+    <meta name="theme-color" content="#12101a" />
+    <meta property="og:title" content="Bluffalo — the online bluffing party game" />
+    <meta
+      property="og:description"
+      content="Invent a convincing lie, then spot the truth among everyone else's. 2-10 players, any device, one room code."
+    />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div id="banner" class="banner" hidden role="status"></div>
+
+    <!-- ============================ HOME ============================ -->
+    <main id="screen-home" class="screen">
+      <header class="hero">
+        <h1 class="logo"><span class="logo-mark" aria-hidden="true">🐃</span> Bluffalo</h1>
+        <p class="tagline">Lie convincingly. Spot the truth. 2–10 players, any device.</p>
+      </header>
+
+      <section class="card">
+        <label class="field">
+          <span class="field-label">Your name</span>
+          <input
+            id="name-input"
+            type="text"
+            maxlength="16"
+            autocomplete="nickname"
+            placeholder="e.g. Sam"
+            enterkeyhint="go"
+          />
+        </label>
+
+        <button id="create-btn" class="btn btn-primary btn-block">Start a new game</button>
+
+        <div class="or"><span>or join your friends</span></div>
+
+        <form id="join-form" class="join-row" novalidate>
+          <input
+            id="code-input"
+            class="code-input"
+            type="text"
+            inputmode="latin"
+            autocapitalize="characters"
+            autocomplete="off"
+            spellcheck="false"
+            maxlength="4"
+            placeholder="CODE"
+            aria-label="Four letter room code"
+            enterkeyhint="go"
+          />
+          <button id="join-btn" class="btn btn-secondary" type="submit">Join</button>
+        </form>
+        <p id="home-error" class="error" role="alert" hidden></p>
+      </section>
+
+      <!-- The rules live in the page so a new player can learn the game
+           without anybody explaining it to them. -->
+      <section class="card rules">
+        <h2>How to play</h2>
+        <ol class="rules-list">
+          <li>
+            <strong>Everyone sees the same statement</strong> with one word missing, like
+            <em>“A group of flamingos is called a ___.”</em>
+          </li>
+          <li>
+            <strong>Make up an answer.</strong> You are trying to write a lie that sounds like the
+            truth. If you accidentally type the real answer, you'll be told to try again.
+          </li>
+          <li>
+            <strong>Then spot the truth.</strong> Everyone's lies get shuffled in with the real
+            answer. Pick the one you think is true — you can't pick your own lie.
+          </li>
+          <li>
+            <strong>Score.</strong>
+            <span class="pill pill-truth">+1000</span> for finding the truth, and
+            <span class="pill pill-bluff">+500</span> for every player who falls for your lie.
+          </li>
+          <li>
+            <strong>Highest score after the last round wins.</strong> Run out of time and you get a
+            feeble answer picked for you, so don't dawdle.
+          </li>
+        </ol>
+        <p class="rules-foot">
+          The host picks 3, 5 or 8 rounds and taps <em>Start</em> once at least two players have
+          joined. Share the 4-letter code (or the join link) to invite people on other devices.
+        </p>
+      </section>
+
+      <footer class="site-foot">
+        <span>Open source · no accounts · no tracking</span>
+      </footer>
+    </main>
+
+    <!-- ============================ GAME ============================ -->
+    <main id="screen-game" class="screen" hidden>
+      <header class="topbar">
+        <button id="code-btn" class="room-code" title="Copy the invite link">
+          <span class="room-code-label">ROOM</span>
+          <span id="room-code" class="room-code-value">————</span>
+        </button>
+        <div class="topbar-mid">
+          <span id="round-label" class="round-label"></span>
+          <span id="phase-label" class="phase-label"></span>
+        </div>
+        <button id="chat-btn" class="btn btn-ghost btn-icon" aria-label="Toggle chat">💬</button>
+      </header>
+      <div class="timer" aria-hidden="true"><div id="timer-fill" class="timer-fill"></div></div>
+
+      <div class="game-grid">
+        <section id="stage" class="stage"></section>
+
+        <aside class="side">
+          <section class="card roster-card">
+            <h2 class="side-title">Players</h2>
+            <ul id="roster" class="roster"></ul>
+            <p id="host-hint" class="host-hint"></p>
+          </section>
+
+          <section id="chat-panel" class="card chat-card" hidden>
+            <h2 class="side-title">Chat</h2>
+            <ul id="chat-log" class="chat-log" aria-live="polite"></ul>
+            <form id="chat-form" class="chat-form">
+              <input
+                id="chat-input"
+                type="text"
+                maxlength="140"
+                placeholder="Say something…"
+                autocomplete="off"
+                enterkeyhint="send"
+              />
+              <button class="btn btn-secondary btn-sm" type="submit">Send</button>
+            </form>
+          </section>
+        </aside>
+      </div>
+
+      <footer class="game-foot">
+        <button id="leave-btn" class="btn btn-ghost btn-sm">Leave game</button>
+      </footer>
+    </main>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

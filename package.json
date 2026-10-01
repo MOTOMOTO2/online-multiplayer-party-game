@@ -9,10 +9,13 @@
   },
   "scripts": {
     "start": "node server/index.js",
-    "test": "node --test test/",
+    "test": "node --test",
     "smoke": "node scripts/smoke.js"
   },
   "dependencies": {
     "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^25.12.0"
   }
 }
