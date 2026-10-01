@@ -1,0 +1,18 @@
+{
+  "name": "bluffalo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bluffalo - a real-time, cross-device multiplayer bluffing party game.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "test": "node --test test/",
+    "smoke": "node scripts/smoke.js"
+  },
+  "dependencies": {
+    "ws": "^8.22.0"
+  }
+}
